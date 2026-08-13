@@ -70,7 +70,7 @@ async function boot(): Promise<void> {
     work: document.createElement("section"),
   };
   sections.header.className = "mx-auto w-full max-w-[1500px] px-6 md:px-10";
-  sections.rail.className = "pt-12 lg:sticky lg:top-[76px] lg:self-start lg:max-h-[calc(100dvh-92px)] lg:overflow-y-auto lg:pr-2";
+  sections.rail.className = "pt-12 lg:sticky lg:top-[76px] lg:self-start lg:pr-2";
   sections.work.className = "pt-12";
 
   const blocks = {

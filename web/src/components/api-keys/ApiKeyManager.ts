@@ -2,11 +2,10 @@ import { appStore } from "../../state/appState";
 import {
   deleteKey,
   refreshBalance,
-  testKey,
   updateKey,
 } from "../../services/apiKeyService";
 import { el } from "../../utils/dom";
-import { formatBalance, formatTimestamp, timeAgo } from "../../utils/formatting";
+import { formatBalance } from "../../utils/formatting";
 import { toast } from "../../utils/toast";
 import type { ApiKey } from "../../types/apiKeys";
 import { AddKeyModal } from "./AddKeyModal";
@@ -132,24 +131,9 @@ export class ApiKeyManager {
       statusDot,
       el("span", { class: "text-sm font-medium text-paper truncate" }, [key.label]),
       key.is_primary ? el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-brass border border-[#e06c2f55] px-1.5 py-0.5" }, ["primary"]) : null,
-      !key.is_enabled ? el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-faint" }, ["disabled"]) : null,
     ]);
 
     const masked = el("span", { class: "font-mono text-[11px] text-muted" }, [key.masked]);
-
-    const meta = el("div", { class: "font-mono text-[10px] text-faint flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5" }, [
-      el("span", {}, [`status ${key.status}`]),
-      el("span", {}, [`last check ${timeAgo(key.last_checked_at)}`]),
-    ]);
-
-    if (key.status === "error" && key.last_error) {
-      meta.appendChild(
-        el("span", { class: "text-bad" }, [`error: ${key.last_error}`])
-      );
-    }
-    if (key.last_success_at) {
-      meta.appendChild(el("span", {}, [`last ok ${formatTimestamp(key.last_success_at)}`]));
-    }
 
     const balance = el("div", { class: "flex flex-col items-end shrink-0" }, [
       el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-faint" }, ["balance"]),
@@ -158,13 +142,9 @@ export class ApiKeyManager {
       }, [formatBalance(key.balance)]),
     ]);
 
-    const actions = el("div", { class: "flex flex-wrap gap-2 mt-3" }, [
-      this.keyAction(busy, "Test", () => this.run(key.id, () => testKey(key.id))),
-      this.keyAction(busy, "Refresh", () => this.run(key.id, () => refreshBalance(key.id))),
-      this.keyAction(false, key.is_enabled ? "Disable" : "Enable", () =>
-        updateKey(key.id, { is_enabled: !key.is_enabled }).catch((e) => toast(e.message, "err"))
-      ),
-      this.keyAction(false, "Set primary", () =>
+    const actions = el("div", { class: "flex items-center gap-2 mt-3" }, [
+      this.refreshIcon(busy, () => this.run(key.id, () => refreshBalance(key.id))),
+      this.keyAction(false, "Use", () =>
         updateKey(key.id, { is_primary: true }).catch((e) => toast(e.message, "err"))
       ),
       this.keyAction(false, "Remove", () => this.remove(key), true),
@@ -175,10 +155,37 @@ export class ApiKeyManager {
         el("div", { class: "min-w-0" }, [labelRow, el("div", { class: "mt-1.5 flex items-center gap-2" }, [masked])]),
         balance,
       ]),
-      meta,
       actions,
     ]);
     return card;
+  }
+
+  private refreshIcon(busy: boolean, handler: () => void): HTMLElement {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("width", "14");
+    svg.setAttribute("height", "14");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "2");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    if (busy) svg.classList.add("animate-spin");
+    const path1 = document.createElementNS(ns, "path");
+    path1.setAttribute("d", "M21 12a9 9 0 1 1-3-6.7");
+    const path2 = document.createElementNS(ns, "path");
+    path2.setAttribute("d", "M21 3v6h-6");
+    svg.append(path1, path2);
+
+    const button = el("button", {
+      class: "chip !px-2.5",
+      type: "button",
+      title: "Refresh API key",
+      disabled: busy ? "true" : null,
+    }, [svg]);
+    button.addEventListener("click", handler);
+    return button;
   }
 
   private keyAction(busy: boolean, label: string, handler: () => void, danger = false): HTMLElement {
