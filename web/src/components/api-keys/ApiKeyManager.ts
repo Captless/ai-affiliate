@@ -171,7 +171,7 @@ export class ApiKeyManager {
     svg.setAttribute("stroke-width", "2");
     svg.setAttribute("stroke-linecap", "round");
     svg.setAttribute("stroke-linejoin", "round");
-    if (busy) svg.classList.add("animate-spin");
+    if (busy) svg.classList.add("icon-spin");
     const path1 = document.createElementNS(ns, "path");
     path1.setAttribute("d", "M21 12a9 9 0 1 1-3-6.7");
     const path2 = document.createElementNS(ns, "path");

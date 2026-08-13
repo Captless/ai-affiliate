@@ -18,9 +18,9 @@ module.exports = {
         bad: "#c14b3a",
       },
       fontFamily: {
-        display: ["'Syne'", "system-ui", "sans-serif"],
-        sans: ["'Archivo'", "system-ui", "sans-serif"],
-        mono: ["'Space Mono'", "ui-monospace", "monospace"],
+        display: ["'IBM Plex Sans'", "system-ui", "sans-serif"],
+        sans: ["'IBM Plex Sans'", "system-ui", "sans-serif"],
+        mono: ["'IBM Plex Mono'", "ui-monospace", "monospace"],
       },
     },
   },

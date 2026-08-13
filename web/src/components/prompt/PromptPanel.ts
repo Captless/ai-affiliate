@@ -38,7 +38,8 @@ export class PromptPanel {
   private autoResize(textarea: HTMLTextAreaElement): void {
     const max = window.innerHeight * 0.6;
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, max)}px`;
+    const content = textarea.scrollHeight;
+    textarea.style.height = `${Math.min(content, max)}px`;
   }
 
   private render(): void {
@@ -66,13 +67,13 @@ export class PromptPanel {
       spellcheck: "false",
     });
     textarea.value = gen.generatedPrompt;
-    this.autoResize(textarea);
     textarea.addEventListener("input", () => {
       this.isEditing = true;
       generationStore.update((s) => ({ ...s, generatedPrompt: textarea.value }));
       this.autoResize(textarea);
     });
     this.textarea = textarea;
+    this.autoResize(textarea);
 
     const copyBtn = el("button", { class: "chip", type: "button" }, ["Copy"]);
     copyBtn.addEventListener("click", () => {
