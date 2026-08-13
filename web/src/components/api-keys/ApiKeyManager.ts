@@ -117,8 +117,8 @@ export class ApiKeyManager {
 
     return el("div", { class: "grid grid-cols-3 gap-3" }, [
       cell("Balance", balanceKnown ? formatBalance(balance) : "no keys", true),
-      cell("Active", `${enabled.length} of ${app.keys.length}`),
-      cell("Primary", primary ? primary.label : "-"),
+      cell("Enabled", `${enabled.length} of ${app.keys.length}`),
+      cell("Active", primary ? primary.label : "-"),
     ]);
   }
 
@@ -134,7 +134,7 @@ export class ApiKeyManager {
     const labelRow = el("div", { class: "flex items-center gap-3 min-w-0" }, [
       statusDot,
       el("span", { class: "text-sm font-medium text-paper truncate" }, [key.label]),
-      key.is_primary ? el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-brass border border-[#e06c2f55] px-1.5 py-0.5" }, ["primary"]) : null,
+      key.is_primary ? el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-brass border border-[#e06c2f55] px-1.5 py-0.5" }, ["active"]) : null,
     ]);
 
     const masked = el("span", { class: "font-mono text-[11px] text-muted" }, [key.masked]);
@@ -148,9 +148,11 @@ export class ApiKeyManager {
 
     const actions = el("div", { class: "flex items-center gap-2 mt-3" }, [
       this.refreshIcon(busy, () => this.run(key.id, () => refreshBalance(key.id))),
-      this.keyAction(false, "Use", () =>
-        updateKey(key.id, { is_primary: true }).catch((e) => toast(e.message, "err"))
-      ),
+      key.is_primary
+        ? this.keyAction(false, "Active")
+        : this.keyAction(false, "Use", () =>
+            updateKey(key.id, { is_primary: true }).catch((e) => toast(e.message, "err"))
+          ),
       this.keyAction(false, "Remove", () => this.remove(key), true),
     ]);
 
@@ -192,13 +194,13 @@ export class ApiKeyManager {
     return button;
   }
 
-  private keyAction(busy: boolean, label: string, handler: () => void, danger = false): HTMLElement {
+  private keyAction(busy: boolean, label: string, handler?: () => void, danger = false): HTMLElement {
     const button = el("button", {
       class: `chip${danger ? " !text-bad hover:!border-[rgba(208,139,122,0.5)]" : ""}`,
       type: "button",
       disabled: busy ? "true" : null,
     }, [busy ? el("span", { class: "spinner" }) : null, label]);
-    button.addEventListener("click", handler);
+    if (handler) button.addEventListener("click", handler);
     return button;
   }
 

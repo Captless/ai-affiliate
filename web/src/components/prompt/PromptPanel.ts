@@ -5,9 +5,6 @@ import { el } from "../../utils/dom";
 import { toast } from "../../utils/toast";
 
 export class PromptPanel {
-  private isEditing = false;
-  private draft: string | null = null;
-  private textarea: HTMLTextAreaElement | null = null;
   private footerInfo: HTMLElement | null = null;
   private lastPose: string | null = null;
 
@@ -15,10 +12,6 @@ export class PromptPanel {
     generationStore.subscribe(() => this.render());
     referenceStore.subscribe(() => this.render());
     this.render();
-  }
-
-  private currentText(): string {
-    return this.draft ?? this.textarea?.value ?? generationStore.get().generatedPrompt;
   }
 
   private recompose(): void {
@@ -29,23 +22,15 @@ export class PromptPanel {
       pose: getPose(gen.poseId),
       userPrompt: gen.userPrompt,
     });
-    this.isEditing = false;
-    this.draft = null;
     generationStore.update((s) => ({ ...s, generatedPrompt: prompt }));
   }
 
   private updateFooter(): void {
     if (!this.footerInfo) return;
-    const text = this.currentText();
+    const gen = generationStore.get();
+    const text = gen.generatedPrompt;
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
     this.footerInfo.textContent = `${words} words, ${text.length} chars`;
-  }
-
-  private autoResize(textarea: HTMLTextAreaElement): void {
-    const max = window.innerHeight * 0.6;
-    textarea.style.height = "auto";
-    const content = textarea.scrollHeight;
-    textarea.style.height = `${Math.min(content, max)}px`;
   }
 
   private render(): void {
@@ -59,34 +44,22 @@ export class PromptPanel {
     }
     this.lastPose = gen.poseId;
 
-    // While editing, keep the editor DOM untouched so focus survives.
-    if (this.isEditing && this.textarea) {
-      this.updateFooter();
-      return;
-    }
     this.container.replaceChildren();
 
     const textarea = el("textarea", {
       class: "prompt-editor",
       placeholder: "Your creative brief will appear here…",
       spellcheck: "false",
-      readonly: this.isEditing ? null : "true",
+      readonly: "true",
     });
     textarea.value = gen.generatedPrompt;
-    textarea.addEventListener("input", () => {
-      this.draft = textarea.value;
-      this.autoResize(textarea);
-      this.updateFooter();
-    });
-    this.textarea = textarea;
-    this.autoResize(textarea);
 
-    const editBtn = el("button", { class: "chip", type: "button" }, [this.isEditing ? "Confirm" : "Edit"]);
-    editBtn.addEventListener("click", () => this.toggleEdit(textarea, editBtn));
+    const editBtn = el("button", { class: "chip", type: "button" }, ["Edit"]);
+    editBtn.addEventListener("click", () => this.openEditor());
 
     const copyBtn = el("button", { class: "chip", type: "button" }, ["Copy"]);
     copyBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(this.currentText()).then(
+      navigator.clipboard.writeText(gen.generatedPrompt).then(
         () => toast("Prompt copied."),
         () => toast("Could not copy.", "err")
       );
@@ -107,19 +80,55 @@ export class PromptPanel {
     this.container.appendChild(root);
   }
 
-  private toggleEdit(textarea: HTMLTextAreaElement, editBtn: HTMLButtonElement): void {
-    if (this.isEditing) {
-      // Confirm: commit the draft to the store.
-      generationStore.update((s) => ({ ...s, generatedPrompt: this.currentText() }));
-      this.isEditing = false;
-      this.draft = null;
-    } else {
-      // Enter edit mode: make editable, focus, flip button to Confirm.
-      this.isEditing = true;
-      textarea.removeAttribute("readonly");
-      editBtn.replaceChildren("Confirm");
-      textarea.focus();
-      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  private openEditor(): void {
+    const overlay = el("div", {
+      class: "fixed inset-0 z-[110] bg-[rgba(5,5,4,0.6)] flex items-start justify-center p-8 pt-[14vh] overflow-y-auto",
+    });
+    const panel = el("div", { class: "modal-panel !max-w-2xl" });
+    overlay.appendChild(panel);
+    this.container.ownerDocument.body.appendChild(overlay);
+
+    const textarea = el("textarea", {
+      class: "prompt-editor !h-[40vh]",
+      spellcheck: "false",
+    });
+    textarea.value = generationStore.get().generatedPrompt;
+
+    const cancelBtn = el("button", { class: "btn", type: "button" }, ["Cancel"]);
+    const confirmBtn = el("button", { class: "btn-primary", type: "button" }, ["Confirm"]);
+
+    const dismiss = () => overlay.remove();
+
+    cancelBtn.addEventListener("click", dismiss);
+    overlay.addEventListener("pointerdown", (event) => {
+      if (event.target === overlay) dismiss();
+    });
+    document.addEventListener("keydown", keydown);
+    function keydown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        document.removeEventListener("keydown", keydown);
+        dismiss();
+      }
     }
+
+    confirmBtn.addEventListener("click", () => {
+      generationStore.update((s) => ({ ...s, generatedPrompt: textarea.value }));
+      dismiss();
+    });
+
+    const footer = el("div", { class: "flex items-center justify-end gap-2 mt-4" }, [cancelBtn, confirmBtn]);
+
+    const body = el("div", { class: "px-6 py-5" }, [
+      el("div", { class: "eyebrow mb-1" }, ["Edit prompt"]),
+      el("h4", { class: "display-title text-xl mb-4" }, ["Edit generated prompt"]),
+      textarea,
+      el("p", { class: "text-[10px] text-faint mt-3" }, [
+        "Your changes override the generated prompt. Selecting a different pose resets it.",
+      ]),
+      footer,
+    ]);
+
+    panel.appendChild(body);
+    setTimeout(() => textarea.focus(), 30);
   }
 }
