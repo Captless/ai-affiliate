@@ -10,7 +10,7 @@ import { generationStore } from "./state/generationState";
 import { loadReferences } from "./services/referenceService";
 import { loadKeys, loadSettings } from "./services/apiKeyService";
 import { listGenerations } from "./services/generationService";
-import { buildPrompt, getPose, getStyle } from "./services/promptService";
+import { buildPrompt, getPose } from "./services/promptService";
 import type { GenerationStatus } from "./types/generation";
 
 const ACTIVE_STATUSES: GenerationStatus[] = ["queued", "processing", "downloading"];
@@ -51,49 +51,59 @@ async function composeInitialPrompt(): Promise<void> {
   const prompt = buildPrompt({
     references: refs,
     pose: getPose(gen.poseId),
-    style: getStyle(gen.styleId),
     userPrompt: gen.userPrompt,
   });
   generationStore.update((s) => ({ ...s, generatedPrompt: prompt }));
 }
 
 async function boot(): Promise<void> {
+  const headerWrap = document.createElement("div");
+  headerWrap.className =
+    "sticky top-0 z-40 w-full bg-ink/90 backdrop-blur-sm border-b border-line";
+
   const main = document.createElement("main");
-  main.className = "mx-auto w-full max-w-7xl px-6 md:px-10 pb-28";
+  main.className = "mx-auto w-full max-w-[1500px] px-6 md:px-10 pb-28";
 
   const sections = {
     header: document.createElement("div"),
-    references: document.createElement("section"),
-    generate: document.createElement("section"),
-    pose: document.createElement("section"),
-    gallery: document.createElement("section"),
+    rail: document.createElement("aside"),
+    work: document.createElement("section"),
   };
-  sections.header.className = "";
-  sections.references.className = "mt-12";
-  sections.generate.className =
-    "mt-16 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14";
-  sections.pose.className = "mt-16";
-  sections.gallery.className = "mt-16";
+  sections.header.className = "mx-auto w-full max-w-[1500px] px-6 md:px-10";
+  sections.rail.className = "pt-12 lg:sticky lg:top-[76px] lg:self-start lg:max-h-[calc(100dvh-92px)] lg:overflow-y-auto lg:pr-2";
+  sections.work.className = "pt-12";
 
-  const genLeft = document.createElement("div");
-  const genRight = document.createElement("div");
-  sections.generate.append(genLeft, genRight);
+  const blocks = {
+    references: document.createElement("div"),
+    output: document.createElement("div"),
+    pose: document.createElement("div"),
+    prompt: document.createElement("div"),
+    gallery: document.createElement("div"),
+  };
+  blocks.references.className = "border-b border-line pb-8";
+  blocks.output.className = "pt-8";
+  blocks.pose.className = "mb-6";
+  blocks.prompt.className = "mb-12";
+  blocks.gallery.className = "";
 
-  main.append(
-    sections.header,
-    sections.references,
-    sections.generate,
-    sections.pose,
-    sections.gallery
-  );
-  appRoot.appendChild(main);
+  sections.rail.append(blocks.references, blocks.output);
+  sections.work.append(blocks.pose, blocks.prompt, blocks.gallery);
+
+  const studio = document.createElement("div");
+  studio.className =
+    "grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] lg:gap-14";
+  studio.append(sections.rail, sections.work);
+
+  main.append(studio);
+  headerWrap.appendChild(sections.header);
+  appRoot.append(headerWrap, main);
 
   new Header(sections.header);
-  new ReferenceSection(sections.references);
-  new GenerationPanel(genLeft);
-  new PromptPanel(genRight);
-  new PoseSelector(sections.pose);
-  new Gallery(sections.gallery);
+  new ReferenceSection(blocks.references);
+  new GenerationPanel(blocks.output);
+  new PoseSelector(blocks.pose);
+  new PromptPanel(blocks.prompt);
+  new Gallery(blocks.gallery);
   const viewer = new ImageViewer(modalRoot);
   new ApiKeyManager(modalRoot);
 
@@ -113,7 +123,7 @@ async function boot(): Promise<void> {
     // The backend being unreachable is surfaced by the API layer per request.
     const banner = document.createElement("div");
     banner.className =
-      "mt-8 border border-bad/40 bg-[#201512] px-4 py-3 text-xs text-bad";
+      "mt-8 border border-bad/40 bg-[#2a1610] px-4 py-3 text-xs text-bad";
     banner.textContent =
       "Could not reach the local studio server. Make sure `py server.py` is running.";
     appRoot.prepend(banner);

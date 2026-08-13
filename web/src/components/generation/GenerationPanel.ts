@@ -1,7 +1,6 @@
 import { generationStore } from "../../state/generationState";
 import { referenceStore } from "../../state/referenceState";
 import { appStore } from "../../state/appState";
-import { STYLES } from "../../services/promptService";
 import { submitGeneration } from "../../services/generationService";
 import { el } from "../../utils/dom";
 import { toast } from "../../utils/toast";
@@ -39,13 +38,6 @@ export class GenerationPanel {
           settings: { ...s.settings, output_format: v as "png" | "jpeg" },
         }))
     );
-    const styleRow = this.buildSelect(
-      "Style",
-      STYLES.map((style) => ({ value: style.id, label: style.label })),
-      gen.styleId,
-      (v) => generationStore.update((s) => ({ ...s, styleId: v }))
-    );
-
     const toggles = el("div", { class: "grid grid-cols-2 gap-x-6 gap-y-3" }, [
       this.buildToggle(
         "Image search",
@@ -80,11 +72,12 @@ export class GenerationPanel {
     ]);
 
     const root = el("div", { class: "flex flex-col gap-5" }, [
-      el("div", { class: "space-y-5" }, [aspect, resolution, format, styleRow, toggles]),
+      el("div", { class: "eyebrow" }, ["Output"]),
+      el("div", { class: "space-y-5" }, [aspect, resolution, format, toggles]),
       el("div", { class: "rule" }),
       el("div", { class: "flex items-end justify-between gap-4" }, [
         el("div", { class: "font-mono text-[10px] text-faint leading-relaxed uppercase tracking-[0.15em]" }, [
-          "wave · nano-banana-2 · edit",
+          "nano-banana-2",
           el("br"),
           "two-reference fashion edit",
         ]),
@@ -112,26 +105,6 @@ export class GenerationPanel {
     return el("div", { class: "flex items-center justify-between gap-4" }, [
       el("span", { class: "eyebrow shrink-0" }, [label]),
       group,
-    ]);
-  }
-
-  private buildSelect(
-    label: string,
-    options: { value: string; label: string }[],
-    active: string,
-    onChange: (value: string) => void
-  ): HTMLElement {
-    const select = el(
-      "select",
-      { class: "select !w-auto", "aria-label": label },
-      options.map((option) =>
-        el("option", { value: option.value, selected: option.value === active ? "true" : null }, [option.label])
-      )
-    );
-    select.addEventListener("change", () => onChange(select.value));
-    return el("div", { class: "flex items-center justify-between gap-4" }, [
-      el("span", { class: "eyebrow shrink-0" }, [label]),
-      select,
     ]);
   }
 

@@ -22,7 +22,7 @@ export class AddKeyModal {
     const label = el("input", {
       class: "input-text",
       type: "text",
-      placeholder: "Label — e.g. “Main account”",
+      placeholder: "Label, e.g. Main account",
       value: "",
     });
     const key = el("input", {

@@ -11,13 +11,12 @@ interface SlotConfig {
   type: RefType;
   label: string;
   sub: string;
-  tall: boolean;
 }
 
 export class ReferenceSection {
   private configs: SlotConfig[] = [
-    { type: "model", label: "Model", sub: "identity · face · hair · body", tall: false },
-    { type: "outfit", label: "Outfit", sub: "garment · colour · material", tall: true },
+    { type: "model", label: "Model", sub: "identity, face, hair, body" },
+    { type: "outfit", label: "Outfit", sub: "garment, colour, material" },
   ];
 
   constructor(private container: HTMLElement) {
@@ -29,21 +28,15 @@ export class ReferenceSection {
     this.container.replaceChildren();
     const refs = referenceStore.get();
 
-    const header = el("div", { class: "flex items-end justify-between gap-4 mb-5" }, [
-      el("div", {}, [
-        el("div", { class: "section-index mb-2" }, ["01 / References"]),
-        el("h2", { class: "display-title text-3xl" }, ["Reference Images"]),
-        el("p", { class: "mt-2 text-xs text-muted max-w-md" }, [
-          "Two persistent references guide every generation. Upload your model and the outfit you want them wearing.",
-        ]),
-      ]),
-      el("div", { class: "font-mono text-[10px] text-faint uppercase tracking-[0.2em] hidden md:block" }, [
-        "session-persistent · stored locally",
+    const header = el("div", { class: "flex items-center justify-between gap-4 mb-4" }, [
+      el("div", { class: "eyebrow" }, ["References"]),
+      el("div", { class: "font-mono text-[10px] text-faint tracking-[0.2em] hidden sm:block" }, [
+        "stored locally",
       ]),
     ]);
 
     const grid = el("div", {
-      class: "grid gap-4 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]",
+      class: "flex flex-col gap-3",
     }, [
       this.buildSlot(refs.model, this.configs[0]),
       this.buildSlot(refs.outfit, this.configs[1]),
@@ -54,9 +47,10 @@ export class ReferenceSection {
   }
 
   private buildSlot(ref: ReferenceImage | null, config: SlotConfig): HTMLElement {
+    const height = config.type === "model" ? "120px" : "150px";
     const slot = el("div", {
       class: "ref-slot",
-      style: config.tall ? "aspect-ratio:3/4.2" : "aspect-ratio:3/3.6",
+      style: `width:100%;height:${height};`,
     });
 
     const typeTag = el("span", { class: "ref-tag" }, [config.label]);
