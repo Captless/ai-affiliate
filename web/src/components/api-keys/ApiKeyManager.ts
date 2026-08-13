@@ -149,7 +149,7 @@ export class ApiKeyManager {
     const actions = el("div", { class: "flex items-center gap-2 mt-3" }, [
       this.refreshIcon(busy, () => this.run(key.id, () => refreshBalance(key.id))),
       key.is_primary
-        ? this.keyAction(false, "Active")
+        ? this.keyAction(false, "Active", undefined, false, true)
         : this.keyAction(false, "Use", () =>
             updateKey(key.id, { is_primary: true }).catch((e) => toast(e.message, "err"))
           ),
@@ -194,11 +194,11 @@ export class ApiKeyManager {
     return button;
   }
 
-  private keyAction(busy: boolean, label: string, handler?: () => void, danger = false): HTMLElement {
+  private keyAction(busy: boolean, label: string, handler?: () => void, danger = false, disabled = false): HTMLElement {
     const button = el("button", {
       class: `chip${danger ? " !text-bad hover:!border-[rgba(208,139,122,0.5)]" : ""}`,
       type: "button",
-      disabled: busy ? "true" : null,
+      disabled: busy || disabled ? "true" : null,
     }, [busy ? el("span", { class: "spinner" }) : null, label]);
     if (handler) button.addEventListener("click", handler);
     return button;
