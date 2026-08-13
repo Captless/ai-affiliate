@@ -82,7 +82,8 @@ export class PromptPanel {
 
   private openEditor(): void {
     const overlay = el("div", {
-      class: "fixed inset-0 z-[110] bg-[rgba(5,5,4,0.6)] flex items-start justify-center p-8 pt-[14vh] overflow-y-auto",
+      class: "fixed inset-0 z-[110] bg-[rgba(8,7,6,0.75)] flex items-start justify-center p-8 pt-[14vh] overflow-y-auto",
+      style: "backdrop-filter: blur(3px)",
     });
     const panel = el("div", { class: "modal-panel !max-w-2xl" });
     overlay.appendChild(panel);
@@ -118,9 +119,12 @@ export class PromptPanel {
 
     const footer = el("div", { class: "flex items-center justify-end gap-2 mt-4" }, [cancelBtn, confirmBtn]);
 
-    const body = el("div", { class: "px-6 py-5" }, [
+    const header = el("div", { class: "px-6 pt-6 pb-5 border-b border-line" }, [
       el("div", { class: "eyebrow mb-1" }, ["Edit prompt"]),
-      el("h4", { class: "display-title text-xl mb-4" }, ["Edit generated prompt"]),
+      el("h4", { class: "display-title text-2xl" }, ["Edit generated prompt"]),
+    ]);
+
+    const body = el("div", { class: "px-6 py-5" }, [
       textarea,
       el("p", { class: "text-[10px] text-faint mt-3" }, [
         "Your changes override the generated prompt. Selecting a different pose resets it.",
@@ -128,7 +132,7 @@ export class PromptPanel {
       footer,
     ]);
 
-    panel.appendChild(body);
+    panel.append(header, body);
     setTimeout(() => textarea.focus(), 30);
   }
 }
