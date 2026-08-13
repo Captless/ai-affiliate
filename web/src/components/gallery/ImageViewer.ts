@@ -39,7 +39,7 @@ export class ImageViewer {
     const topbar = el("div", { class: "viewer-topbar" }, [
       el("div", { class: "flex items-center gap-4" }, [
         el("span", { class: "font-mono text-[10px] uppercase tracking-[0.25em] text-faint" }, ["Viewer"]),
-        el("span", { class: "viewer-statusline" }, [`${job.id.slice(0, 8)} · ${new Date(job.created_at).toLocaleString()}`]),
+        el("span", { class: "viewer-statusline" }, [`${job.id.slice(0, 8)} / ${new Date(job.created_at).toLocaleString()}`]),
       ]),
       el("div", { class: "flex items-center gap-4" }, [
         el("span", { class: "viewer-zoom-hint", id: "viewer-zoom" }, ["100%"]),

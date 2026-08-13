@@ -27,7 +27,7 @@ export async function uploadReference(
     return payload;
   });
   if (!data?.reference) {
-    throw new Error("Upload failed — no reference returned.");
+    throw new Error("Upload failed, no reference returned.");
   }
   const next: ReferenceSlots = referenceStore.get();
   next[type] = data.reference;

@@ -28,8 +28,8 @@ export class Gallery {
 
     const header = el("div", { class: "flex items-end justify-between gap-4 mb-5" }, [
       el("div", {}, [
-        el("div", { class: "section-index mb-2" }, ["04 / Gallery"]),
-        el("h2", { class: "display-title text-3xl" }, ["Generations"]),
+        el("div", { class: "eyebrow mb-1" }, ["Gallery"]),
+        el("h2", { class: "display-title text-2xl" }, ["Generations"]),
       ]),
       el("span", { class: "font-mono text-[10px] text-faint uppercase tracking-[0.2em]" }, [
         `${gen.jobs.length} local${gen.jobs.length === 1 ? "" : "s"}`,
@@ -39,10 +39,10 @@ export class Gallery {
     const grid = el("div", { class: "gallery-grid" });
 
     if (gen.jobs.length === 0) {
-      const empty = el("div", { class: "col-span-12 border border-dashed border-[#2e2e26] py-20 flex flex-col items-center gap-3 text-center" }, [
+      const empty = el("div", { class: "col-span-12 border border-dashed border-[#443e35] py-20 flex flex-col items-center gap-3 text-center" }, [
         el("span", { class: "display-title text-xl text-faint" }, ["Nothing here yet"]),
         el("span", { class: "text-xs text-faint max-w-sm" }, [
-          "Queued generations and their outputs will appear here, newest first. Set your references, compose a prompt and press Generate.",
+          "Set your references, compose a brief and press Generate. Outputs land here, newest first.",
         ]),
       ]);
       grid.appendChild(empty);
@@ -130,7 +130,7 @@ export class Gallery {
 
   private timeLabel(job: GenerationJob): string {
     const date = new Date(job.completed_at ?? job.updated_at);
-    if (Number.isNaN(date.getTime())) return "—";
+    if (Number.isNaN(date.getTime())) return "-";
     return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 

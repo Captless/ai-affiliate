@@ -1,7 +1,7 @@
 export function formatTimestamp(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString(undefined, {
     month: "short",
     day: "numeric",
@@ -11,7 +11,7 @@ export function formatTimestamp(iso: string | null | undefined): string {
 }
 
 export function formatBalance(balance: number | null): string {
-  if (balance === null) return "—";
+  if (balance === null) return "-";
   return `$${balance.toFixed(2)}`;
 }
 
@@ -21,9 +21,9 @@ export function truncate(value: string, length: number): string {
 }
 
 export function timeAgo(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
   const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
   if (seconds < 5) return "just now";
   if (seconds < 60) return `${seconds}s ago`;

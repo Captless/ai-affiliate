@@ -1,12 +1,12 @@
-import type { GenerationStyle, PosePreset } from "../types/prompt";
+import type { PosePreset } from "../types/prompt";
 import type { ReferenceSlots } from "../types/references";
 
 export const POSES: PosePreset[] = [
   {
-    id: "instagram-outfit-flex",
-    label: "Instagram Outfit Flex",
+    id: "instagram-natural",
+    label: "Instagram Natural",
     description:
-      "Showing off the outfit like an Instagram outfit-flex post: weight shifted to one hip, relaxed shoulders, one hand resting near a pocket or casually gesturing toward the garment, confident but understated expression.",
+      "Use a natural, relaxed Instagram fashion pose with realistic body language, natural weight distribution, relaxed hands, and an effortless candid feel.",
   },
   {
     id: "mirror-fit-check",
@@ -52,73 +52,52 @@ export const POSES: PosePreset[] = [
   },
 ];
 
-export const STYLES: GenerationStyle[] = [
-  {
-    id: "natural",
-    label: "Natural",
-    description: "natural, authentic lifestyle photography, soft available light",
-  },
-  {
-    id: "editorial",
-    label: "Editorial",
-    description: "high-fashion editorial photography, dramatic directional lighting, refined composition",
-  },
-  {
-    id: "street",
-    label: "Street",
-    description: "contemporary street style photography, urban environment, candid energy",
-  },
-  {
-    id: "glamour",
-    label: "Glamour",
-    description: "polished glamour photography, soft studio lighting, flattering finish",
-  },
-  {
-    id: "minimal",
-    label: "Minimal",
-    description: "minimalist photography, clean background, muted tones, generous negative space",
-  },
-];
+/* Fixed prompt sections. Always present, non-editable. */
 
-const CONSTRAINTS = `Create an authentic Instagram-style fashion photograph with natural body language, relaxed hand positioning, natural weight distribution and fashion-oriented framing. The result must not look stiff or artificially posed. Preserve the model's identity and keep the outfit from the outfit reference clearly recognizable.`;
+export const MODEL_IDENTITY = `Make the person in the main model reference wear the exact outfit shown in the outfit reference. Preserve the model's identity, face, hairstyle, body proportions, skin texture, appearance, background, environment, mirror, lighting, camera perspective, and overall visual character from the main reference. Only change the outfit and pose.`;
+
+export const QUALITY = `Keep the result highly photorealistic, with realistic skin, fabric, lighting, and natural image quality.`;
+
+export const NEGATIVE_PROMPT = `identity change, face change, hairstyle change, body modification, altered proportions, changed background, changed environment, different lighting, different mirror, added objects, extra people, outfit alteration, color change, material change, distorted anatomy, deformed hands, unrealistic skin, skin smoothing, beauty retouching, artificial pose, CGI, cartoon, blurry, low quality, text, logo, watermark`;
+
+/* ------------------------------------------------------------------ structure */
+
+export interface PromptSections {
+  identity: string;
+  pose: string;
+  quality: string;
+  userPrompt: string | null;
+  negative: string;
+}
 
 export interface BuildPromptInput {
   references: ReferenceSlots;
   pose: PosePreset;
-  style: GenerationStyle;
   userPrompt: string;
 }
 
-export function buildPrompt(input: BuildPromptInput): string {
-  const parts: string[] = [];
-
-  if (input.references.model) {
-    parts.push(
-      "Use the MODEL reference image as the source of identity: preserve the person's face, facial identity, hairstyle, body proportions and overall appearance exactly."
-    );
-  }
-  if (input.references.outfit) {
-    parts.push(
-      "Use the OUTFIT reference image as the source of the outfit: dress the model in the exact outfit shown, preserving the garments, their colors, materials, cuts, details and styling."
-    );
-  }
-
-  parts.push(`Pose direction: ${input.pose.description}`);
-  parts.push(`Style direction: ${input.style.description}`);
-
+export function buildPromptSections(input: BuildPromptInput): PromptSections {
   const user = input.userPrompt.trim();
-  if (user) {
-    parts.push(user.replace(/\s+/g, " ").trim());
-  }
+  return {
+    identity: MODEL_IDENTITY,
+    pose: input.pose.description,
+    quality: QUALITY,
+    userPrompt: user ? user.replace(/\s+/g, " ").trim() : null,
+    negative: NEGATIVE_PROMPT,
+  };
+}
 
-  parts.push(CONSTRAINTS);
+export function composePositivePrompt(sections: PromptSections): string {
+  const parts: string[] = [sections.identity, sections.pose, sections.quality];
+  if (sections.userPrompt) parts.push(sections.userPrompt);
+  parts.push(`Avoid: ${sections.negative}`);
   return parts.join("\n\n");
+}
+
+export function buildPrompt(input: BuildPromptInput): string {
+  return composePositivePrompt(buildPromptSections(input));
 }
 
 export function getPose(id: string): PosePreset {
   return POSES.find((pose) => pose.id === id) ?? POSES[0];
-}
-
-export function getStyle(id: string): GenerationStyle {
-  return STYLES.find((style) => style.id === id) ?? STYLES[0];
 }
