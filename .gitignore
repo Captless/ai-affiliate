@@ -1,0 +1,10 @@
+backend/__pycache__/
+__pycache__/
+*.pyc
+data/
+storage/
+node_modules/
+web/dist/
+.env
+*.log
+.DS_Store
