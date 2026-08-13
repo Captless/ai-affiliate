@@ -18,9 +18,9 @@ module.exports = {
         bad: "#c14b3a",
       },
       fontFamily: {
-        display: ["'IBM Plex Sans'", "system-ui", "sans-serif"],
-        sans: ["'IBM Plex Sans'", "system-ui", "sans-serif"],
-        mono: ["'IBM Plex Mono'", "ui-monospace", "monospace"],
+        display: ["ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "sans-serif"],
+        sans: ["ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "'Liberation Mono'", "'Courier New'", "monospace"],
       },
     },
   },

@@ -12,11 +12,13 @@ import { AddKeyModal } from "./AddKeyModal";
 
 export class ApiKeyManager {
   private modal: HTMLElement | null = null;
+  private panel: HTMLElement | null = null;
 
   constructor(private mount: HTMLElement) {
     appStore.subscribe(() => {
       if (appStore.get().apiKeysOpen && !this.modal) this.open();
       if (!appStore.get().apiKeysOpen && this.modal) this.close();
+      if (this.modal && this.panel) this.render(this.panel);
     });
   }
 
@@ -26,6 +28,7 @@ export class ApiKeyManager {
     backdrop.appendChild(panel);
     this.mount.appendChild(backdrop);
     this.modal = backdrop;
+    this.panel = panel;
 
     backdrop.addEventListener("pointerdown", (event) => {
       if (event.target === backdrop) this.requestClose();
@@ -48,6 +51,7 @@ export class ApiKeyManager {
     this.cleanup = null;
     this.modal?.remove();
     this.modal = null;
+    this.panel = null;
   }
 
   private requestClose(): void {

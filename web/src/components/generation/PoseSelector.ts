@@ -14,12 +14,7 @@ export class PoseSelector {
 
     const header = el("div", { class: "flex items-center justify-between mb-3" }, [
       el("span", { class: "eyebrow" }, ["Pose"]),
-      el("button", { class: "chip", type: "button" }, ["Random"]),
     ]);
-    (header.lastChild as HTMLElement).addEventListener("click", () => {
-      const random = POSES[Math.floor(Math.random() * POSES.length)];
-      generationStore.update((s) => ({ ...s, poseId: random.id }));
-    });
 
     const list = el("div", { class: "pose-list" }, [
       ...POSES.map((pose) => {
