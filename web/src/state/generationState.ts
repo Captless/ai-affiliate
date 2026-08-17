@@ -6,7 +6,6 @@ import type {
 
 export interface GenerationUiState {
   settings: GenerationSettings;
-  poseId: string;
   styleId: string;
   userPrompt: string;
   generatedPrompt: string;
@@ -25,7 +24,6 @@ export const DEFAULT_SETTINGS: GenerationSettings = {
 
 export const DEFAULT_UI_STATE: GenerationUiState = {
   settings: { ...DEFAULT_SETTINGS },
-  poseId: "casual-standing",
   styleId: "natural",
   userPrompt: "",
   generatedPrompt: "",

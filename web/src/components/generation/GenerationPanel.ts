@@ -150,7 +150,6 @@ export class GenerationPanel {
       await submitGeneration({
         prompt: gen.generatedPrompt,
         settings: gen.settings,
-        pose_id: gen.poseId,
         generation_style: gen.styleId,
         user_prompt: gen.userPrompt,
         key_selection: app.settings.key_selection,

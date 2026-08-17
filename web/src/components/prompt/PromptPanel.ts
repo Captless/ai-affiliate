@@ -1,138 +1,117 @@
 import { generationStore } from "../../state/generationState";
 import { referenceStore } from "../../state/referenceState";
-import { buildPrompt, getPose } from "../../services/promptService";
+import { buildPrompt } from "../../services/promptService";
 import { el } from "../../utils/dom";
 import { toast } from "../../utils/toast";
 
 export class PromptPanel {
   private footerInfo: HTMLElement | null = null;
-  private lastPose: string | null = null;
+  private editing = false;
+  private savedValue = "";
+  private ignoreNextRender = false;
 
   constructor(private container: HTMLElement) {
     generationStore.subscribe(() => this.render());
-    referenceStore.subscribe(() => this.render());
-    this.render();
-  }
-
-  private recompose(): void {
-    const gen = generationStore.get();
-    const refs = referenceStore.get();
-    const prompt = buildPrompt({
-      references: refs,
-      pose: getPose(gen.poseId),
-      userPrompt: gen.userPrompt,
+    referenceStore.subscribe(() => {
+      const gen = generationStore.get();
+      const refs = referenceStore.get();
+      const prompt = buildPrompt({ references: refs, userPrompt: gen.userPrompt });
+      generationStore.update((s) => ({ ...s, generatedPrompt: prompt }));
     });
-    generationStore.update((s) => ({ ...s, generatedPrompt: prompt }));
+    this.render();
   }
 
   private updateFooter(): void {
     if (!this.footerInfo) return;
-    const gen = generationStore.get();
-    const text = gen.generatedPrompt;
+    const text = generationStore.get().generatedPrompt;
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
     this.footerInfo.textContent = `${words} words, ${text.length} chars`;
   }
 
   private render(): void {
+    if (this.ignoreNextRender) { this.ignoreNextRender = false; return; }
     const gen = generationStore.get();
-
-    // Pose changed: reset edit state and recompose.
-    if (this.lastPose !== null && gen.poseId !== this.lastPose) {
-      this.lastPose = gen.poseId;
-      this.recompose();
-      return;
-    }
-    this.lastPose = gen.poseId;
-
     this.container.replaceChildren();
 
     const textarea = el("textarea", {
-      class: "prompt-editor",
-      placeholder: "Your creative brief will appear here…",
+      class: `prompt-editor${this.editing ? " editing" : ""}`,
+      placeholder: "Your creative brief will appear here\u2026",
       spellcheck: "false",
-      readonly: "true",
-    });
+    }) as HTMLTextAreaElement;
     textarea.value = gen.generatedPrompt;
+    textarea.readOnly = !this.editing;
 
-    const editBtn = el("button", { class: "chip", type: "button" }, ["Edit"]);
-    editBtn.addEventListener("click", () => this.openEditor());
+    textarea.addEventListener("input", () => {
+      this.ignoreNextRender = true;
+      generationStore.update((s) => ({ ...s, generatedPrompt: textarea.value }));
+      this.updateFooter();
+    });
 
-    const copyBtn = el("button", { class: "chip", type: "button" }, ["Copy"]);
-    copyBtn.addEventListener("click", () => {
+    let editBtn: HTMLElement;
+    let cancelBtn: HTMLElement | null = null;
+
+    if (this.editing) {
+      editBtn = this.makeBtn("Save", "chip chip-active", () => {
+        this.editing = false;
+        this.savedValue = "";
+        this.render();
+        toast("Prompt saved.");
+      });
+      cancelBtn = this.makeBtn("Cancel", "chip", () => {
+        this.ignoreNextRender = true;
+        generationStore.update((s) => ({ ...s, generatedPrompt: this.savedValue }));
+        this.editing = false;
+        this.savedValue = "";
+        this.render();
+      });
+    } else {
+      editBtn = this.makeBtn("Edit", "chip", () => {
+        this.savedValue = generationStore.get().generatedPrompt;
+        this.editing = true;
+        this.render();
+        setTimeout(() => {
+          if (this.textareaRef) {
+            this.textareaRef.focus();
+          }
+        }, 30);
+      });
+    }
+
+    const copyBtn = this.makeBtn("Copy", "chip", () => {
       navigator.clipboard.writeText(gen.generatedPrompt).then(
         () => toast("Prompt copied."),
         () => toast("Could not copy.", "err")
       );
     });
 
-    const footer = el("div", { class: "flex items-center justify-end mt-2 font-mono text-[10px] text-faint" }, [
+    const footer = el("div", { class: "flex items-center justify-end pt-2 font-mono text-[10px] text-faint" }, [
       el("span", {}, ["0 words, 0 chars"]),
     ]);
     this.footerInfo = footer.lastChild as HTMLElement;
     this.updateFooter();
 
-    const root = el("div", { class: "flex flex-col" }, [
-      el("div", { class: "flex items-end justify-end gap-2 mb-3" }, [editBtn, copyBtn]),
+    const btns = [editBtn];
+    if (cancelBtn) btns.push(cancelBtn);
+    btns.push(copyBtn);
+
+    const root = el("div", { class: "flex flex-col flex-1" }, [
+      el("div", { class: "flex items-center justify-between gap-2 mb-3" }, [
+        el("span", { class: "eyebrow" }, ["Prompt"]),
+        el("div", { class: "flex gap-2" }, btns),
+      ]),
       textarea,
       footer,
     ]);
 
+    this.textareaRef = textarea;
     this.container.appendChild(root);
   }
 
-  private openEditor(): void {
-    const overlay = el("div", {
-      class: "fixed inset-0 z-[110] bg-[rgba(8,7,6,0.75)] flex items-start justify-center p-8 pt-[14vh] overflow-y-auto",
-      style: "backdrop-filter: blur(3px)",
-    });
-    const panel = el("div", { class: "modal-panel !max-w-2xl" });
-    overlay.appendChild(panel);
-    this.container.ownerDocument.body.appendChild(overlay);
+  private textareaRef: HTMLTextAreaElement | null = null;
 
-    const textarea = el("textarea", {
-      class: "prompt-editor !h-[40vh]",
-      spellcheck: "false",
-    });
-    textarea.value = generationStore.get().generatedPrompt;
-
-    const cancelBtn = el("button", { class: "btn", type: "button" }, ["Cancel"]);
-    const confirmBtn = el("button", { class: "btn-primary", type: "button" }, ["Confirm"]);
-
-    const dismiss = () => overlay.remove();
-
-    cancelBtn.addEventListener("click", dismiss);
-    overlay.addEventListener("pointerdown", (event) => {
-      if (event.target === overlay) dismiss();
-    });
-    document.addEventListener("keydown", keydown);
-    function keydown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        document.removeEventListener("keydown", keydown);
-        dismiss();
-      }
-    }
-
-    confirmBtn.addEventListener("click", () => {
-      generationStore.update((s) => ({ ...s, generatedPrompt: textarea.value }));
-      dismiss();
-    });
-
-    const footer = el("div", { class: "flex items-center justify-end gap-2 mt-4" }, [cancelBtn, confirmBtn]);
-
-    const header = el("div", { class: "px-6 pt-6 pb-5 border-b border-line" }, [
-      el("div", { class: "eyebrow mb-1" }, ["Edit prompt"]),
-      el("h4", { class: "display-title text-2xl" }, ["Edit generated prompt"]),
-    ]);
-
-    const body = el("div", { class: "px-6 py-5" }, [
-      textarea,
-      el("p", { class: "text-[10px] text-faint mt-3" }, [
-        "Your changes override the generated prompt. Selecting a different pose resets it.",
-      ]),
-      footer,
-    ]);
-
-    panel.append(header, body);
-    setTimeout(() => textarea.focus(), 30);
+  private makeBtn(label: string, cls: string, handler: () => void): HTMLElement {
+    const btn = el("button", { class: cls, type: "button" }, [label]);
+    btn.addEventListener("click", handler);
+    return btn;
   }
 }

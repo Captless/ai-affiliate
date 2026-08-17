@@ -5,7 +5,6 @@ import type { GenerationJob, GenerationSettings } from "../types/generation";
 export interface GeneratePayload {
   prompt: string;
   settings: GenerationSettings;
-  pose_id: string | null;
   generation_style: string | null;
   user_prompt: string;
   key_selection: string;
@@ -39,7 +38,6 @@ export async function submitGeneration(payload: GeneratePayload): Promise<Genera
     output_format: payload.settings.output_format,
     enable_image_search: payload.settings.enable_image_search,
     enable_web_search: payload.settings.enable_web_search,
-    pose_id: payload.pose_id,
     generation_style: payload.generation_style,
     user_prompt: payload.user_prompt,
     key_selection: payload.key_selection,
