@@ -13,12 +13,22 @@ import { AddKeyModal } from "./AddKeyModal";
 export class ApiKeyManager {
   private modal: HTMLElement | null = null;
   private panel: HTMLElement | null = null;
+  private renderVersion = 0;
 
   constructor(private mount: HTMLElement) {
     appStore.subscribe(() => {
-      if (appStore.get().apiKeysOpen && !this.modal) this.open();
-      if (!appStore.get().apiKeysOpen && this.modal) this.close();
-      if (this.modal && this.panel) this.render(this.panel);
+      const state = appStore.get();
+      if (state.apiKeysOpen && !this.modal) {
+        this.open();
+      } else if (!state.apiKeysOpen && this.modal) {
+        this.close();
+      } else if (state.apiKeysOpen && this.modal && this.panel) {
+        requestAnimationFrame(() => {
+          if (this.modal && this.panel) {
+            this.render(this.panel);
+          }
+        });
+      }
     });
   }
 
@@ -59,7 +69,8 @@ export class ApiKeyManager {
   }
 
   private render(panel: HTMLElement): void {
-    panel.replaceChildren();
+    this.renderVersion++;
+    panel.innerHTML = "";
     const app = appStore.get();
 
     const header = el("div", { class: "px-6 pt-6 pb-5 border-b border-line" }, [
@@ -89,7 +100,14 @@ export class ApiKeyManager {
         el("button", { class: "btn-primary !py-1.5 !px-3", type: "button" }, ["Add key"]),
       ]),
       el("div", { class: "space-y-3" }, [
-        ...(app.keys.length ? app.keys.map((key) => this.buildKeyCard(key)) : [this.buildEmpty()]),
+        ...(app.keys.length ? app.keys.map((key) => {
+          try {
+            return this.buildKeyCard(key);
+          } catch (error) {
+            console.error('Error building key card for', key.id, ':', error);
+            return el("div", {}, ["Error rendering key"]);
+          }
+        }) : [this.buildEmpty()]),
       ]),
     ]);
 
@@ -125,6 +143,8 @@ export class ApiKeyManager {
   private buildKeyCard(key: ApiKey): HTMLElement {
     const app = appStore.get();
     const busy = app.busyKeyId === key.id;
+    const allKeys = app.keys;
+    const isPrimary = key.id === allKeys.find((k) => k.is_primary)?.id;
 
     const statusDot = el("span", {
       class: "w-1.5 h-1.5 rounded-full shrink-0",
@@ -134,7 +154,7 @@ export class ApiKeyManager {
     const labelRow = el("div", { class: "flex items-center gap-3 min-w-0" }, [
       statusDot,
       el("span", { class: "text-sm font-medium text-paper truncate" }, [key.label]),
-      key.is_primary ? el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-brass border border-[#e06c2f55] px-1.5 py-0.5" }, ["active"]) : null,
+      isPrimary ? el("span", { class: "font-mono text-[9px] uppercase tracking-[0.2em] text-brass border border-[#e06c2f55] px-1.5 py-0.5" }, ["active"]) : null,
     ]);
 
     const masked = el("span", { class: "font-mono text-[11px] text-muted" }, [key.masked]);
@@ -146,12 +166,16 @@ export class ApiKeyManager {
       }, [formatBalance(key.balance)]),
     ]);
 
-    const actions = el("div", { class: "flex items-center gap-2 mt-3" }, [
+const actions = el("div", { class: "flex items-center gap-2 mt-3" }, [
       this.refreshIcon(busy, () => this.run(key.id, () => refreshBalance(key.id))),
-      key.is_primary
+      isPrimary
         ? this.keyAction(false, "Active", undefined, false, true)
         : this.keyAction(false, "Use", () =>
-            updateKey(key.id, { is_primary: true }).catch((e) => toast(e.message, "err"))
+            updateKey(key.id, { is_primary: true })
+              .then(() => {
+                if (this.panel) this.render(this.panel);
+              })
+              .catch((e) => toast(e.message, "err"))
           ),
       this.keyAction(false, "Remove", () => this.remove(key), true),
     ]);
@@ -209,6 +233,7 @@ export class ApiKeyManager {
     try {
       await task();
       toast("Done.");
+      if (this.panel) this.render(this.panel);
     } catch (error) {
       toast(error instanceof Error ? error.message : "Request failed.", "err");
     } finally {
@@ -221,6 +246,7 @@ export class ApiKeyManager {
     try {
       await deleteKey(key.id);
       toast("Key removed.");
+      if (this.panel) this.render(this.panel);
     } catch (error) {
       toast(error instanceof Error ? error.message : "Could not remove key.", "err");
     }
