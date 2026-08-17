@@ -1,70 +1,137 @@
-
-### `ui-design.md`
-
-```md
 # AI Affiliate — UI Design Polish Specification
 
 ## Design Objective
 
-Polish the existing AI Affiliate interface.
+Polish the existing AI Affiliate interface without redesigning it.
 
-This is NOT a redesign.
+The existing visual identity must remain intact:
 
-The existing:
+- existing theme
+- existing color palette
+- existing font family
+- existing layout structure
+- existing component language
+- existing workflow
 
-- theme
-- color identity
-- font family
-- layout direction
-- component style
+The goal is to make the application feel like a **finished, professionally designed tool** rather than an early implementation.
 
-must remain recognizable.
+Do not redesign the application.
 
-The goal is to make the current UI feel more professional, clean, deliberate, and production-ready.
+Do not introduce a new design system.
 
----
+Do not replace working components unnecessarily.
 
-# 1. Preserve Existing Identity
-
-Before changing the UI:
-
-1. Inspect the existing font family.
-2. Inspect the existing Tailwind configuration.
-3. Inspect existing colors.
-4. Inspect existing spacing.
-5. Inspect existing component styles.
-6. Reuse the existing visual system.
-
-Do NOT replace the existing font.
-
-Do NOT introduce a completely different design language.
-
-Do NOT redesign the application from scratch.
+The implementation must first inspect the current UI and then improve it systematically.
 
 ---
 
-# 2. Visual Quality
+# 1. Mandatory UI Audit Before Changes
 
-Improve:
+Before modifying the frontend, inspect the actual rendered UI and the existing frontend implementation.
 
+Review:
+
+- global layout
+- header
+- navigation
+- page/container widths
+- cards
+- panels
+- sections
+- form controls
+- labels
+- buttons
+- inputs
+- dropdowns
+- upload areas
+- image previews
+- generated-output areas
 - spacing
-- alignment
-- typography hierarchy
-- control sizing
-- image presentation
+- typography
 - borders
-- selected states
+- shadows
+- radii
 - hover states
+- active states
+- disabled states
 - loading states
 - empty states
-- drag/drop feedback
+- responsive behavior
 
-The UI should feel:
+Do not make isolated cosmetic changes without considering the entire page.
+
+The goal is **visual consistency across the whole application**.
+
+---
+
+# 2. Preserve the Existing Design Language
+
+Inspect the current implementation and preserve:
+
+- font family
+- primary colors
+- background colors
+- existing accent color
+- existing border treatment
+- existing radius style
+- existing general layout
+
+Do NOT replace the current theme with:
+
+- generic dark SaaS
+- purple AI gradients
+- glassmorphism
+- excessive rounded cards
+- excessive pills
+- completely new typography
+- a new component library
+
+The result should still immediately look like the same application.
+
+Think:
+
+> existing design → refined version
+
+not:
+
+> existing design → completely different product
+
+---
+
+# 3. Global Layout Consistency
+
+Audit the main page geometry.
+
+Fix:
+
+- uneven content widths
+- inconsistent left/right margins
+- inconsistent section widths
+- misaligned cards
+- awkward vertical spacing
+- elements that do not share the same alignment grid
+- inconsistent container padding
+- sections that appear randomly positioned
+
+Establish a consistent visual grid using the existing layout system.
+
+Related sections should visually line up.
+
+For example:
 
 ```text
-clean
-technical
-professional
-focused
-quiet
-polished
+┌──────────────────────────────────────────────┐
+│ Header                                       │
+├──────────────────────────────────────────────┤
+│                                              │
+│ Section                                      │
+│ ┌──────────────────────────────────────────┐ │
+│ │ Content                                  │ │
+│ └──────────────────────────────────────────┘ │
+│                                              │
+│ Section                                      │
+│ ┌──────────────────────────────────────────┐ │
+│ │ Content                                  │ │
+│ └──────────────────────────────────────────┘ │
+│                                              │
+└──────────────────────────────────────────────┘
